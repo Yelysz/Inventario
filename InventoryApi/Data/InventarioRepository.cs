@@ -23,4 +23,6 @@ public class InventarioRepository : IInventarioRepository
             "SELECT IdProducto, Existencia, UltimaFechaActualizacion FROM dbo.Inventario WHERE IdProducto=@id",
             new { id = idProducto });
     }
+
+
 }

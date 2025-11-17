@@ -26,26 +26,40 @@ public class ProductosRepository : IProductosRepository
         );
     }
 
-    public async Task<Product> CreateAsync(string nombre, string? descripcion, decimal precioVenta, int minimoExistencia)
+    public async Task<Product> CreateAsync(string nombre, string? descripcion, decimal precioVenta, int minimoExistencia, string? codigoProducto)
     {
         using IDbConnection conn = _factory.Create();
         return await conn.QuerySingleAsync<Product>(
             "dbo.spProductos_Create",
-            new { Nombre = nombre, Descripcion = descripcion, PrecioVenta = precioVenta, MinimoExistencia =  minimoExistencia},
+            new
+            {
+                Nombre = nombre,
+                Descripcion = descripcion,
+                PrecioVenta = precioVenta,
+                MinimoExistencia = minimoExistencia,
+                CodigoProducto = codigoProducto   // puede ir null o ""
+            },
             commandType: CommandType.StoredProcedure
         );
     }
 
-    public async Task<Product?> UpdateAsync(int id, string nombre, string? descripcion, decimal precioVenta, int  minimoExistencia)
+    public async Task<Product?> UpdateAsync(int id, string nombre, string? descripcion, decimal precioVenta, int minimoExistencia, string? codigoProducto)
     {
         using IDbConnection conn = _factory.Create();
         return await conn.QueryFirstOrDefaultAsync<Product>(
             "dbo.spProductos_Update",
-            new { IdProducto = id, Nombre = nombre, Descripcion = descripcion, PrecioVenta = precioVenta, MinimoExistencia = minimoExistencia },
+            new
+            {
+                IdProducto = id,
+                Nombre = nombre,
+                Descripcion = descripcion,
+                PrecioVenta = precioVenta,
+                MinimoExistencia = minimoExistencia,
+                CodigoProducto = codigoProducto  // null / "" -> se deja a criterio del SP
+            },
             commandType: CommandType.StoredProcedure
         );
     }
-
 
     public async Task<bool> DeleteAsync(int id)
     {
@@ -57,5 +71,4 @@ public class ProductosRepository : IProductosRepository
         );
         return rows > 0;  // true => 204 NoContent, false => 404 NotFound
     }
-
 }

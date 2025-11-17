@@ -9,6 +9,7 @@ namespace InventoryApi.Controllers;
 public class ProductosController : ControllerBase
 {
     private readonly IProductosRepository _repo;
+
     public ProductosController(IProductosRepository repo) => _repo = repo;
 
     [HttpGet]
@@ -17,25 +18,79 @@ public class ProductosController : ControllerBase
 
     [HttpGet("{id:int}")]
     public async Task<ActionResult<Product>> Get(int id)
-        => (await _repo.GetAsync(id)) is { } p ? Ok(p) : NotFound();
-    public record ProductoCreateDto(string Nombre, string? Descripcion, decimal PrecioVenta, int MinimoExistencia);
-    public record ProductoUpdateDto(string Nombre, string? Descripcion, decimal PrecioVenta, int MinimoExistencia);
+        => (await _repo.GetAsync(id)) is { } p ? Ok(p) : NotFound(new { message = "Producto no encontrado." });
+
+    // Ahora incluyen CodigoProducto opcional
+    public record ProductoCreateDto(
+        string Nombre,
+        string? Descripcion,
+        decimal PrecioVenta,
+        int MinimoExistencia,
+        string? CodigoProducto
+    );
+
+    public record ProductoUpdateDto(
+        string Nombre,
+        string? Descripcion,
+        decimal PrecioVenta,
+        int MinimoExistencia,
+        string? CodigoProducto
+    );
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] ProductoCreateDto dto)
     {
-        var created = await _repo.CreateAsync(dto.Nombre, dto.Descripcion, dto.PrecioVenta, dto.MinimoExistencia);
-        return CreatedAtAction(nameof(Get), new { id = created.IdProducto }, created);
+        try
+        {
+            var created = await _repo.CreateAsync(
+                dto.Nombre,
+                dto.Descripcion,
+                dto.PrecioVenta,
+                dto.MinimoExistencia,
+                dto.CodigoProducto
+            );
+
+            return CreatedAtAction(nameof(Get), new { id = created.IdProducto }, created);
+        }
+        catch (Exception ex)
+        {
+            // Aquí normalmente llegará el mensaje del RAISERROR (código duplicado, etc.)
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] ProductoUpdateDto dto)
     {
-        var updated = await _repo.UpdateAsync(id, dto.Nombre, dto.Descripcion, dto.PrecioVenta, dto.MinimoExistencia);
-        return updated is null ? NotFound() : Ok(updated);
+        try
+        {
+            var updated = await _repo.UpdateAsync(
+                id,
+                dto.Nombre,
+                dto.Descripcion,
+                dto.PrecioVenta,
+                dto.MinimoExistencia,
+                dto.CodigoProducto
+            );
+
+            return updated is null
+                ? NotFound(new { message = "Producto no encontrado." })
+                : Ok(updated);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
-        => (await _repo.DeleteAsync(id)) ? NoContent() : NotFound();
+    {
+        var deleted = await _repo.DeleteAsync(id);
+
+        if (!deleted)
+            return NotFound(new { message = "El producto no existe o ya estaba eliminado." });
+
+        return Ok(new { message = "Producto eliminado correctamente." });
+    }
 }
