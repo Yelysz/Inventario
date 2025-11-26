@@ -10,6 +10,7 @@ CREATE TABLE dbo.Productos(
   Nombre NVARCHAR(120) NOT NULL,
   Descripcion NVARCHAR(500),
   PrecioVenta DECIMAL(18,2) NOT NULL CHECK (PrecioVenta >= 0),
+
   FechaCreacion DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
   UltimaFechaActualizacion DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
 );

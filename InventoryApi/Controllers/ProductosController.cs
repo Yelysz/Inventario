@@ -1,6 +1,7 @@
-using Microsoft.AspNetCore.Mvc;
 using InventoryApi.Data;
 using InventoryApi.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 
 namespace InventoryApi.Controllers;
 
@@ -86,11 +87,39 @@ public class ProductosController : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var deleted = await _repo.DeleteAsync(id);
+        try
+        {
+            var deleted = await _repo.DeleteAsync(id);
 
-        if (!deleted)
-            return NotFound(new { message = "El producto no existe o ya estaba eliminado." });
+            if (!deleted)
+                return NotFound(new { message = "El producto no existe o ya estaba eliminado." });
 
-        return Ok(new { message = "Producto eliminado correctamente." });
+            return Ok(new { message = "Producto eliminado correctamente." });
+        }
+        catch (SqlException ex) when (ex.Number == 50000) // RAISERROR custom
+        {
+            return BadRequest(new
+            {
+                message = ex.Message // "Este producto no puede eliminarse porque tiene inventario asociado."
+            });
+        }
+        catch (SqlException ex) when (ex.Number == 547) // FK safety
+        {
+            return BadRequest(new
+            {
+                message = "Este producto no puede eliminarse porque está relacionado con Inventario o Movimientos."
+            });
+        }
     }
+
+    //[HttpDelete("{id:int}")]
+    //public async Task<IActionResult> Delete(int id)
+    //{
+    //    var deleted = await _repo.DeleteAsync(id);
+
+    //    if (!deleted)
+    //        return NotFound(new { message = "El producto no existe o ya estaba eliminado." });
+
+    //    return Ok(new { message = "Producto eliminado correctamente." });
+    //}
 }
