@@ -2,9 +2,12 @@ using InventoryApi.Data;
 using InventoryApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using Microsoft.AspNetCore.Authorization;
+
 
 namespace InventoryApi.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class ProductosController : ControllerBase

@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using InventoryApi.Data;
+using Microsoft.AspNetCore.Authorization;
+
 
 
 namespace InventoryApi.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class InventarioController : ControllerBase
